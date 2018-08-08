@@ -6,7 +6,8 @@ const PORT = process.env.PORT || 9000;
 const app = express();
 
 app.get('/screenshot', async (request, response) => {
-	const url = request.query.url;
+  const url = request.query.url;
+  console.log(url);
 
 	if (!url) {
     return response.status(400).send(
@@ -34,7 +35,7 @@ app.get('/screenshot', async (request, response) => {
     fullPage = false;
 	}
 
-	const browser = await puppeteer.launch()
+	const browser = await puppeteer.launch({args: ['--no-sandbox', '--disable-setuid-sandbox']});
 
 	try {
     const page = await browser.newPage();
@@ -45,7 +46,6 @@ app.get('/screenshot', async (request, response) => {
       fullPage,
       // omitBackground: true
 		};
-		console.log(opts);
 
     if (!fullPage) {
       opts.clip = {
