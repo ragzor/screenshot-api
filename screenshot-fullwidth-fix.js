@@ -8,7 +8,7 @@ module.exports = exports = async function(url, size, encoding, scale) {
     deviceScaleFactor: Number(scale)
 	};
 
-	let fullPage = true;
+	// let fullPage = true;
 
   if (size) {
     const [width, height] = size.split(',').map(item => Number(item));
@@ -20,7 +20,7 @@ module.exports = exports = async function(url, size, encoding, scale) {
 		viewport.height = height;
 
 		// remove fullPage if size is set
-    fullPage = false;
+    // fullPage = false;
 	}
 
 	const browser = await puppeteer.launch({args: ['--no-sandbox', '--disable-setuid-sandbox']});
@@ -30,22 +30,33 @@ module.exports = exports = async function(url, size, encoding, scale) {
     await page.setViewport(viewport);
 		await page.goto(url, {waitUntil: 'networkidle0'});
 
+		// Full Page Screenshot Fix
+		const bodyHandle = await page.$('body');
+		const { width, height } = await bodyHandle.boundingBox();
+		viewport.width = width;
+		viewport.height = height;
 
     const opts = {
-			fullPage,
+			// fullPage,
 			encoding,
       type: "jpeg"
       // omitBackground: true
 		};
 
-    if (!fullPage) {
-      opts.clip = {
+    // if (!fullPage) {
+    //   opts.clip = {
+    //     x: 0,
+    //     y: 0,
+    //     width: viewport.width,
+    //     height: viewport.height
+    //   };
+		// }
+		  opts.clip = {
         x: 0,
         y: 0,
         width: viewport.width,
         height: viewport.height
       };
-		}
 
 		const buffer = await page.screenshot(opts);
 
