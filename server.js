@@ -18,7 +18,7 @@ app.get('/screenshot', async (request, response) => {
   const viewport = {
     width: 1280,
     height: 1024,
-    deviceScaleFactor: 1
+    deviceScaleFactor: 2
 	};
 
 	let fullPage = true;
@@ -44,6 +44,7 @@ app.get('/screenshot', async (request, response) => {
 
     const opts = {
       fullPage,
+      type: "jpeg"
       // omitBackground: true
 		};
 
@@ -57,7 +58,7 @@ app.get('/screenshot', async (request, response) => {
     }
 
     const buffer = await page.screenshot(opts);
-    response.type('image/png').send(buffer);
+    response.type('image/jpeg').send(buffer);
   } catch (err) {
     response.status(500).send(err.toString());
   }
