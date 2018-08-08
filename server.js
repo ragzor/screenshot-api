@@ -1,69 +1,39 @@
 const express = require('express');
-const puppeteer = require('puppeteer');
+const screenshot = require('./screenshot');
 
 const PORT = process.env.PORT || 9000;
 
 const app = express();
 
 app.get('/screenshot', async (request, response) => {
-  const url = request.query.url;
-  console.log(url);
 
+  // Get URL & Size from get request
+  const url = request.query.url; // http://example.com
+  const size = request.query.size; // 600,800
+  const encoding = request.query.encoding || 'binary'; // binary/base64
+  const scale = request.query.scale || '1';
+
+  // return 400 if url is incorrect
 	if (!url) {
     return response.status(400).send(
       'Please provide a URL. Example: ?url=https://example.com');
-	}
-
-	// Default to a reasonably large viewport for full page screenshots.
-  const viewport = {
-    width: 1280,
-    height: 1024,
-    deviceScaleFactor: 2
-	};
-
-	let fullPage = true;
-  const size = request.query.size;
-  if (size) {
-    const [width, height] = size.split(',').map(item => Number(item));
-    if (!(isFinite(width) && isFinite(height))) {
-      return response.status(400).send(
-        'Malformed size parameter. Example: ?size=800,600');
-    }
-    viewport.width = width;
-    viewport.height = height;
-
-    fullPage = false;
-	}
-
-	const browser = await puppeteer.launch({args: ['--no-sandbox', '--disable-setuid-sandbox']});
-
-	try {
-    const page = await browser.newPage();
-    await page.setViewport(viewport);
-    await page.goto(url, {waitUntil: 'networkidle0'});
-
-    const opts = {
-      fullPage,
-      type: "jpeg"
-      // omitBackground: true
-		};
-
-    if (!fullPage) {
-      opts.clip = {
-        x: 0,
-        y: 0,
-        width: viewport.width,
-        height: viewport.height
-      };
-    }
-
-    const buffer = await page.screenshot(opts);
-    response.type('image/jpeg').send(buffer);
-  } catch (err) {
-    response.status(500).send(err.toString());
   }
 
-  await browser.close();
+  screenshot(url, size, encoding, scale)
+  .then(buffer => {
+
+    // Return JSON if base64
+    if (encoding === 'base64') {
+      response.type('application/json').send(buffer);
+    } else {
+      // Return image if binary
+      response.type('image/jpeg').send(buffer);
+    }
+
+  })
+  .catch((err) => {
+    response.status(500).send(err.toString());
+  });
 
 });
 
